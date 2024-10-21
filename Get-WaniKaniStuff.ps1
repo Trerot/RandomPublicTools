@@ -9,6 +9,12 @@ function Get-WaniKaniStuff {
     )
     
     begin {
+        $WaniKaniStuffFolder = "$env:OneDrive\StudyLog\WaniKani"
+        $previousFilePath = "$WaniKaniStuffFolder\previous.json"
+        if ($true -ne (Test-Path $WaniKaniStuffFolder )) {
+            New-Item -ItemType Directory -Path $WaniKaniStuffFolder 
+        }
+
         $credfile = "$env:USERPROFILE\creds\wanikani.xml"
         if (!(Test-Path $credfile)) {
             # cred file doesnt exisist.
@@ -78,11 +84,48 @@ function Get-WaniKaniStuff {
         $object = [PSCustomObject]@{
             Reviews = $ReviewsDone
             Status  = $StatusObject
+            Date    = Get-Date
         }
+        if (Test-Path $previousFilePath) {
+            $PreviousContent = Get-Content -Path $previousFilePath | ConvertFrom-Json
+
+            $diffobject = [PSCustomObject]@{
+                Unstarted   = $StatusObject.Apprentice - $PreviousContent.status.apprentice
+                Apprentice  = $StatusObject.Apprentice - $PreviousContent.status.Apprentice
+                Guru        = $StatusObject.Guru - $PreviousContent.status.Guru
+                Master      = $StatusObject.Master - $PreviousContent.status.Master
+                Enlightened = $StatusObject.Enlightened - $PreviousContent.status.Enlightened
+                Burned      = $StatusObject.Burned - $PreviousContent.status.Burned
+            }
+            $diffstringobject = [PSCustomObject]@{
+                Unstarted   = "$($StatusObject.Unstarted) $(if($diffobject.Unstarted -ge 0){'+'}else{''})$($diffobject.Unstarted)"
+                Apprentice  = "$($StatusObject.Apprentice) $(if($diffobject.Apprentice -ge 0){'+'}else{''})$($diffobject.Apprentice)"
+                Guru        = "$($StatusObject.Guru) $(if($diffobject.Guru -ge 0){'+'}else{''})$($diffobject.Guru)"
+                Master      = "$($StatusObject.Master) $(if($diffobject.Master -ge 0){'+'}else{''})$($diffobject.Master)"
+                Enlightened = "$($StatusObject.Enlightened) $(if($diffobject.Enlightened -ge 0){'+'}else{''})$($diffobject.Enlightened)"
+                Burned      = "$($StatusObject.Burned) $(if($diffobject.Burned -ge 0){'+'}else{''})$($diffobject.Burned)"
+            }
+
+            # move previous to a new file
+            $NewFilePath = "$WaniKaniStuffFolder/wanistats-$($object.date.ToShortDateString())-$($object.date.ToShorttimeString())"
+            New-Item -ItemType File -Path $NewFilePath
+            Set-Content -Path $NewFilePath -Value ($object | ConvertTo-Json)
+            # overwrite previous file with current.
+
+        }
+        else {
+            # only if there is nothing there. create a new one 
+            Set-Content -Path $previousFilePath -Value ($object | ConvertTo-Json)
+        }
+
+
+
+        #
     }
     
     end {
-        # done processing! now i have two objects
-        $object     
+        # done processing! now i have two objects in object.
+        $object
+        $diffstringobject
     }
 }

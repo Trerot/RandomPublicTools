@@ -26,7 +26,9 @@ function Get-DailyStats {
         $dailyStuff.reviews
         Write-Host "-- todays rank --"
         $dailyStuff.status
-    }
+        Write-Host "-- todays diff string --"
+        $dailyStuff[-1]
+        }
     
     end {
         
