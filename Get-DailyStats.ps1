@@ -28,8 +28,15 @@ function Get-DailyStats {
         $dailyStuff.status
         Write-Host "-- todays diff string --"
         $dailyStuff[-1]
-        }
-    
+
+        write-host 'copy paste to studylog'
+        $percent = ($dailyStuff.Reviews.meaningcorrectpercentage + $dailyStuff.Reviews.readingcorrectpercentage) / 2
+        $reviewcount = $dailyStuff.Reviews.ReviewsDoneToday
+        $message = "$reviewcount@$percent%"
+        Write-Host $message
+        Set-Clipboard -Value $message
+    }
+
     end {
         
     }
